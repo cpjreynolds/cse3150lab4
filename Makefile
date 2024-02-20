@@ -1,3 +1,4 @@
+CXX=g++
 CXXFLAGS=-Wall -g --std=c++20
 
 # testing target
@@ -14,7 +15,7 @@ OBJECTS:=$(SOURCES:.cpp=.o)
 # only the testing main file
 #TSOURCES:=$(filter-out lab2.cpp,$(SOURCES))
 
-.PHONY: all clean check run leaks
+.PHONY: all clean check run leaks fullcheck
 
 all: $(RUNTARGET) $(TESTTARGET)
 
@@ -24,8 +25,13 @@ check: $(TESTTARGET)
 run: $(RUNTARGET)
 	./$(RUNTARGET)
 
+fullcheck: $(TESTTARGET)
+	make clean
+	$(CXX) $(CPPFLAGS) -DTESTING -DFULLCHECK $(CXXFLAGS) $^ -o $@
+
+
 $(TESTTARGET): $(SOURCES)
-	$(CXX) $(CPPFLAGS) -DTESTING $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CPPFLAGS) -DTESTING $(CXXFLAGS) -Wno-unused-function $^ -o $@
 
 $(RUNTARGET): $(SOURCES)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
