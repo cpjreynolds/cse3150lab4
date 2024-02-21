@@ -82,6 +82,8 @@ run_iteration(std::unordered_map<symbols, int>& table, size_t n, size_t ns,
 //
 // throws an exception if distribution does not converge within `max_iters`
 // iterations.
+//
+// **NOTE**: n > 10 has extremely long runtime and likely will not terminate
 static std::pair<double, int>
 run_to_convergence(std::unordered_map<symbols, int>& table, size_t n, size_t ns,
                    double eps, size_t max_iters, bool bias = false)
@@ -96,6 +98,7 @@ run_to_convergence(std::unordered_map<symbols, int>& table, size_t n, size_t ns,
         if (++iters > max_iters) {
             throw std::runtime_error("maximum iterations");
         }
+        std::cout << sdev << '\t' << eps * (1.0 / table.size()) << std::endl;
     } while (sdev > eps * (1.0 / table.size()) || iters < n * 2);
 
     return {sdev, nsyms};
@@ -232,14 +235,37 @@ int main(int argc, char** argv)
 
     std::cout << std::fixed;
     try {
-        auto [sd, ns] = run_to_convergence(table, n, nsyms, eps, maxi);
-        std::cout << "convergence for ";
-        std::cout << "(n=" << n << ", nsyms=" << nsyms << ", eps=" << eps << ")"
+        double sd;
+        int ns;
+        if (n <= 10) {
+            std::tie(sd, ns) = run_to_convergence(table, n, nsyms, eps, maxi);
+            std::cout << "convergence for ";
+            std::cout << "(n=" << n << ", nsyms=" << nsyms << ", eps=" << eps
+                      << ")"
+                      << ":\n";
+            std::cout << "unique lists\t= " << table.size() << std::endl;
+            std::cout << "total samples\t= " << ns << std::endl;
+            std::cout << "uniform freq.\t= " << (1.0 / table.size())
+                      << std::endl;
+            std::cout << "stddev(freqs)\t= " << sd << std::endl;
+        }
+        else { // n is too great for convergence in an acceptable timeframe
+            std::tie(std::ignore, ns) = run_iteration(table, n, nsyms);
+            size_t uniq = table.size();
+            std::tie(std::ignore, ns) = run_iteration(table, n, nsyms);
+            size_t nuniq = table.size();
+            while (uniq != nuniq) {
+                // find how many unique lists there are at least
+                std::tie(std::ignore, ns) = run_iteration(table, n, nsyms);
+                uniq = nuniq;
+                nuniq = table.size();
+            }
+        }
+        std::cout << "result for ";
+        std::cout << "(n=" << n << ", nsyms=" << nsyms << ")"
                   << ":\n";
         std::cout << "unique lists\t= " << table.size() << std::endl;
         std::cout << "total samples\t= " << ns << std::endl;
-        std::cout << "uniform freq.\t= " << (1.0 / table.size()) << std::endl;
-        std::cout << "stddev(freqs)\t= " << sd << std::endl;
 
         // literally just because I was bored and wanted an excuse to do
         // more programming.

@@ -3,6 +3,7 @@ CXXFLAGS=-Wall -g --std=c++20
 
 # testing target
 TESTTARGET=lab4test.out
+FULLTESTTARGET=lab4fulltest.out
 # runnable target
 RUNTARGET=lab4.out
 
@@ -25,10 +26,11 @@ check: $(TESTTARGET)
 run: $(RUNTARGET)
 	./$(RUNTARGET)
 
-fullcheck: $(TESTTARGET)
-	make clean
-	$(CXX) $(CPPFLAGS) -DTESTING -DFULLCHECK $(CXXFLAGS) $^ -o $@
+fullcheck: $(FULLTESTTARGET)
+	./$(FULLTESTTARGET)
 
+$(FULLTESTTARGET): $(SOURCES)
+	$(CXX) $(CPPFLAGS) -DTESTING -DFULLCHECK $(CXXFLAGS) $^ -o $@
 
 $(TESTTARGET): $(SOURCES)
 	$(CXX) $(CPPFLAGS) -DTESTING $(CXXFLAGS) -Wno-unused-function $^ -o $@
@@ -46,4 +48,6 @@ clean:
 		$(RUNTARGET)				\
 		$(RUNTARGET:.out=.out.dSYM)	\
 		$(TESTTARGET)				\
-		$(TESTTARGET:.out=.out.dSYM)
+		$(TESTTARGET:.out=.out.dSYM)\
+		$(FULLTESTTARGET)			\
+		$(FULLTESTTARGET:.out=.out.dSYM)
